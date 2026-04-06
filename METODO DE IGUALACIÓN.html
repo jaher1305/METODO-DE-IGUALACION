@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resolvedor de Sistemas de Ecuaciones por Igualación</title>
+    <style>
+        /* --- ESTILOS CSS (Sin cambios) --- */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 30px 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px;
+        }
+
+        h1 {
+            color: #1a73e8;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #555;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #155ab6;
+        }
+
+        #solucion {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #e8f0fe;
+            border-left: 5px solid #1a73e8;
+            border-radius: 6px;
+            display: none; /* Se oculta por defecto */
+        }
+
+        #solucion h2 {
+            margin-top: 0;
+            color: #155ab6;
+        }
+
+        #solucion ol {
+            padding-left: 20px;
+        }
+
+        #solucion li {
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .ecuacion {
+            font-family: "Courier New", Courier, monospace;
+            background-color: #f1f3f4;
+            padding: 2px 6px;
+            border-radius: 4px;
+            white-space: pre-wrap; /* Mantiene los espacios */
+        }
+
+        .error {
+            color: #d93025;
+            font-weight: bold;
+            background-color: #fce8e6;
+            padding: 10px;
+            border-radius: 6px;
+            border-left: 5px solid #d93025;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Resolviendo Sistemas de ecuaciones por el Método de Igualación</h1>
+        <h3>Creado por: Herrera Jairo</h3>
+        <p>Ingresa las dos ecuaciones en el formato <code>ax + by = c</code>. Por ejemplo: <code>2x + 3y = 7</code></p>
+        
+        <div class="input-group">
+            <label for="ecuacion1">Ecuación 1:</label>
+            <input type="text" id="ecuacion1" placeholder="Ej: 2x + 3y = 7">
+        </div>
+        
+        <div class="input-group">
+            <label for="ecuacion2">Ecuación 2:</label>
+            <input type="text" id="ecuacion2" placeholder="Ej: x - y = 1">
+        </div>
+        
+        <button id="resolverBtn">Resolver Paso a Paso</button>
+        
+        <div id="solucion">
+            <!-- Aquí se mostrará el resultado -->
+        </div>
+    </div>
+
+    <script>
+        // --- LÓGICA JAVASCRIPT CORREGIDA ---
+        document.getElementById('resolverBtn').addEventListener('click', resolverSistema);
+
+        function resolverSistema() {
+            const solucionDiv = document.getElementById('solucion');
+            solucionDiv.innerHTML = ''; // Limpiar resultados anteriores
+            solucionDiv.style.display = 'block';
+
+            const ec1Str = document.getElementById('ecuacion1').value.trim();
+            const ec2Str = document.getElementById('ecuacion2').value.trim();
+
+            if (!ec1Str || !ec2Str) {
+                solucionDiv.innerHTML = '<p class="error">Por favor, ingresa ambas ecuaciones.</p>';
+                return;
+            }
+
+            const ec1 = parsearEcuacion(ec1Str);
+            const ec2 = parsearEcuacion(ec2Str);
+
+            if (!ec1 || !ec2) {
+                solucionDiv.innerHTML = '<p class="error">Formato de ecuación inválido. Usa el formato "ax + by = c". Ej: "2x - y = 5".</p>';
+                return;
+            }
+
+            const { a: a1, b: b1, c: c1 } = ec1;
+            const { a: a2, b: b2, c: c2 } = ec2;
+            
+            let pasosHTML = '<h2>Solución Paso a Paso</h2><ol>';
+
+            // --- PASO 1: Despejar 'y' en ambas ecuaciones ---
+            pasosHTML += `<li><strong>Paso 1: Despejar la variable 'y' en ambas ecuaciones.</strong><br>`;
+            pasosHTML += `Partimos de las ecuaciones originales:<br>`;
+            pasosHTML += `<span class="ecuacion">1) ${formatearEcuacion(a1, b1, c1)}</span><br>`;
+            pasosHTML += `<span class="ecuacion">2) ${formatearEcuacion(a2, b2, c2)}</span><br><br>`;
+            
+            const y1 = despejarY(a1, b1, c1);
+            const y2 = despejarY(a2, b2, c2);
+            
+            pasosHTML += `Despejando 'y':<br>`;
+            pasosHTML += `<span class="ecuacion">y = ${y1.expresion}</span><br>`;
+            pasosHTML += `<span class="ecuacion">y = ${y2.expresion}</span></li>`;
+
+            // --- PASO 2: Igualar las expresiones ---
+            pasosHTML += `<li><strong>Paso 2: Igualar las expresiones de 'y'.</strong><br>`;
+            pasosHTML += `Como ambas expresiones son iguales a 'y', las igualamos entre sí:<br>`;
+            pasosHTML += `<span class="ecuacion">${y1.expresion} = ${y2.expresion}</span></li>`;
+
+            // --- PASO 3: Despejar 'x' ---
+            pasosHTML += `<li><strong>Paso 3: Resolver la ecuación resultante para encontrar 'x'.</strong><br>`;
+            pasosHTML += `Quitamos denominadores multiplicando en cruz:<br>`;
+            const cruzIzq_str = `(${y2.denominador}) * (${y1.numerador})`;
+            const cruzDer_str = `(${y1.denominador}) * (${y2.numerador})`;
+            pasosHTML += `<span class="ecuacion">${cruzIzq_str} = ${cruzDer_str}</span><br>`;
+            
+            const expIzq_str = expandirVisual(y2.denominador, y1.numerador);
+            const expDer_str = expandirVisual(y1.denominador, y2.numerador);
+            pasosHTML += `Expandimos las multiplicaciones:<br>`;
+            pasosHTML += `<span class="ecuacion">${expIzq_str} = ${expDer_str}</span><br>`;
+            
+            // Cálculo real de los coeficientes para agrupar
+            const coefX = (b1 * a2) - (b2 * a1);
+            const indepX = (b1 * c2) - (b2 * c1);
+
+            // Detección de casos especiales
+            if (coefX === 0 && indepX === 0) {
+                pasosHTML += `Al agrupar términos, obtenemos <span class="ecuacion">0x = 0</span>.<br>`;
+                pasosHTML += `Esto significa que el sistema tiene <strong>infinitas soluciones</strong> (las ecuaciones representan la misma línea).</li></ol>`;
+                solucionDiv.innerHTML = pasosHTML;
+                return;
+            }
+            if (coefX === 0 && indepX !== 0) {
+                pasosHTML += `Al agrupar términos, obtenemos <span class="ecuacion">0x = ${indepX}</span>.<br>`;
+                pasosHTML += `Esto es una contradicción. El sistema <strong>no tiene solución</strong> (las líneas son paralelas).</li></ol>`;
+                solucionDiv.innerHTML = pasosHTML;
+                return;
+            }
+
+            pasosHTML += `Agrupamos los términos con 'x' a la izquierda y los números a la derecha:<br>`;
+            pasosHTML += `<span class="ecuacion">(${coefX})x = ${indepX}</span><br>`;
+            
+            const valorX = indepX / coefX;
+            pasosHTML += `Despejamos 'x' dividiendo:<br>`;
+            pasosHTML += `<span class="ecuacion">x = ${indepX} / ${coefX}</span><br>`;
+            pasosHTML += `<span class="ecuacion"><strong>x = ${valorX}</strong></span></li>`;
+
+            // --- PASO 4: Sustituir 'x' para encontrar 'y' ---
+            pasosHTML += `<li><strong>Paso 4: Sustituir el valor de 'x' en una de las ecuaciones despejadas de 'y'.</strong><br>`;
+            pasosHTML += `Usamos la primera expresión: <span class="ecuacion">y = ${y1.expresion}</span><br>`;
+            pasosHTML += `Sustituimos <strong>x = ${valorX}</strong>:<br>`;
+            const sustitucion_str = `(${c1} - ${a1}*${valorX}) / ${b1}`;
+            pasosHTML += `<span class="ecuacion">y = ${sustitucion_str}</span><br>`;
+            const valorY = (c1 - a1 * valorX) / b1;
+            pasosHTML += `Calculamos el resultado:<br>`;
+            pasosHTML += `<span class="ecuacion"><strong>y = ${valorY}</strong></span></li>`;
+
+            // --- PASO 5: Solución final ---
+            pasosHTML += `<li><strong>Paso 5: Escribir la solución del sistema.</strong><br>`;
+            pasosHTML += `El sistema tiene una única solución:<br>`;
+            pasosHTML += `<span class="ecuacion">x = ${valorX}</span><br>`;
+            pasosHTML += `<span class="ecuacion">y = ${valorY}</span></li>`;
+            
+            pasosHTML += '</ol>';
+            solucionDiv.innerHTML = pasosHTML;
+        }
+
+        // --- FUNCIONES AUXILIARES (CORREGIDAS Y MEJORORADAS) ---
+
+        function parsearEcuacion(str) {
+            const regex = /([+-]?\d*)\s*x\s*([+-]?\s*\d*)\s*y\s*=\s*([+-]?\d+)/;
+            const match = str.replace(/\s/g, '').match(regex);
+
+            if (!match) return null;
+
+            let a = match[1];
+            let b = match[2];
+            const c = parseInt(match[3], 10);
+
+            if (a === '' || a === '+') a = '1';
+            if (a === '-') a = '-1';
+            if (b === '' || b === '+') b = '1';
+            if (b === '-') b = '-1';
+            
+            return { a: parseInt(a, 10), b: parseInt(b, 10), c };
+        }
+        
+        function formatearEcuacion(a, b, c) {
+            let ecuacion = '';
+            ecuacion += (a >= 0 && a !== 1) ? `${a}x` : (a === 1 ? `x` : `-${Math.abs(a)}x`);
+            ecuacion += (b >= 0 && b !== 1) ? ` + ${b}y` : (b === 1 ? ` + y` : ` - ${Math.abs(b)}y`);
+            ecuacion += ` = ${c}`;
+            return ecuacion;
+        }
+
+        function despejarY(a, b, c) {
+            const numerador = `(${c} - ${a}x)`;
+            const denominador = b;
+            const expresion = `${numerador} / ${denominador}`;
+            return { expresion, numerador, denominador };
+        }
+
+        /**
+         * Función corregida para expandir visualmente la multiplicación.
+         * Ej: expandirVisual(2, "(7 - 3x)") -> "14 - 6x"
+         */
+        function expandirVisual(coef, termino) {
+            const c = parseInt(coef);
+            const match = termino.match(/\(([-+]?\d+)\s*[-+]\s*([-+]?\d+)x\)/);
+            if (!match) return `(${coef})*(${termino})`;
+
+            const t1 = parseInt(match[1]);
+            const t2 = parseInt(match[2]);
+            const op = termino.includes('-') ? -1 : 1;
+
+            const res1 = c * t1;
+            const res2 = c * t2 * op;
+
+            return `${res1} ${res2 >= 0 ? '+' : ''}${res2}x`;
+        }
+
+    </script>
+</body>
+</html>
